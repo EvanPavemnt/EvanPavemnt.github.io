@@ -881,6 +881,12 @@ p {
   font-weight: 700;
 }
 
+.hero-img {
+  border-radius: 20px;
+  -webkit-filter: drop-shadow(2px 2px 2px #000000);
+  filter: drop-shadow(2px 2px 2px #000000);
+}
+
 @media only screen and (min-width: 768px) and (max-width: 991px), (max-width: 767px) {
   .hero-section .hero-img {
     padding-top: 30px;
@@ -1154,6 +1160,12 @@ p {
   .about-section .about-img .shape.shape-2 {
     bottom: 30px;
   }
+}
+
+.about-img-custom {
+  border-radius: 20px;
+  -webkit-filter: drop-shadow(2px 2px 2px #000000);
+  filter: drop-shadow(2px 2px 2px #000000);
 }
 
 .about-section .about-img-2 {
