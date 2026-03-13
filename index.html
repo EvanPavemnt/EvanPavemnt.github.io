@@ -35,6 +35,7 @@
     <link rel="stylesheet" href="assets/css/animate.css" />
     <link rel="stylesheet" href="assets/css/main.css" />
     <link href="https://fonts.cdnfonts.com/css/open-sauce-one" rel="stylesheet">
+    
   </head>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XTD5ST2Q30"></script>
@@ -685,6 +686,95 @@
     </section>
     <!-- ======== pricing-section end ======== -->
 
+
+    <!-- ======== testimonial section start ======== -->
+    <section id="testimonial" class="py-70">
+      <div class="container">
+        <div class="row justify-content-center text-center">
+          <div class="col-xl-6 col-lg-8">
+            <h2 class="mb-20 wow fadeInUp" data-wow-delay=".2s">What Our Clients Say</h2>
+            <!-- <p class="text-muted wow fadeInUp" data-wow-delay=".3s">
+              Real feedback from teams we’ve helped improve their HubSpot setup.
+            </p> -->
+          </div>
+        </div>
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <div class="testimonial-card p-4 p-md-5 bg-white rounded-3 shadow-sm text-center wow fadeInUp" data-wow-delay=".4s">
+              <img
+                src="https://lh3.googleusercontent.com/a-/ALV-UjUBMQiayFlt3cD6fLAR3FPP5fFHRqC4I3n6rEGk_NEACNJYKnsF=s480-p-k-rw-no"
+                alt="Client photo"
+                class="rounded-circle mb-3"
+                width="80"
+                height="80"
+              />
+              <p class="fs-5 fst-italic mb-4">
+                “Pavemnt helped us turn a messy HubSpot portal into a clean, automated system. 
+                We’re saving hours every week and finally getting real visibility into our pipeline.”
+              </p>
+              <h5 class="mb-0">Dustin Belliston</h5>
+              <p class="text-muted mb-0">Founder, CurrentClient</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- ======== testimonial section end ======== -->
+
+
+    <!-- ======== quiz section start ======== -->
+    <section id="quiz">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-xxl-5 col-xl-6 col-lg-8 col-md-9">
+            <div class="section-title text-center mb-35">
+              <h2 class="mb-25 wow fadeInUp" data-wow-delay=".2s">
+                HubSpot Health Check
+              </h2>
+              <!-- <p class="wow fadeInUp" data-wow-delay=".4s">
+                Lorem ipsum dolor sit amet consetetur sadipscing elitr sswed
+                diam nonumy eirmod tempor nvidunt.
+              </p> -->
+            </div>
+          </div>
+        </div>
+        <div id="hubspot-health-check">
+          <div class="quiz-container">
+            <div class="quiz-step active">
+              <p>1. Is your CRM data segmented by lifecycle stage?</p>
+              <button data-score="1">Yes</button>
+              <button data-score="0">No</button>
+            </div>
+            <div class="quiz-step">
+              <p>2. Are you using workflows to automate follow-ups?</p>
+              <button data-score="1">Yes</button>
+              <button data-score="0">No</button>
+            </div>
+            <div class="quiz-step">
+              <p>3. Do you track deals with custom pipeline stages?</p>
+              <button data-score="1">Yes</button>
+              <button data-score="0">No</button>
+            </div>
+            <div class="quiz-step">
+              <p>4. Do you use custom properties to capture key partner/client data?</p>
+              <button data-score="1">Yes</button>
+              <button data-score="0">No</button>
+            </div>
+            <div class="quiz-step">
+              <p>5. Do you review reports or dashboards regularly?</p>
+              <button data-score="1">Yes</button>
+              <button data-score="0">No</button>
+            </div>
+            <div class="quiz-result">
+              <p class="result-message"></p>
+              <input type="email" id="quiz-email" placeholder="Enter your email to unlock a free audit" />
+              <button id="submit-email">Let's Get Started</button>
+            </div>
+          </div>
+        </div>
+    </section>
+    <!-- ======== quiz section end ======== -->
+
     <!-- ======== testimonial-section start ======== -->
     <!-- <section id="testimonials" class="testimonial-section">
       <div class="container">
@@ -944,5 +1034,56 @@
     <script src="assets/js/tiny-slider.js"></script>
     <script src="assets/js/wow.min.js"></script>
     <script src="assets/js/main.js"></script>
+
+    <script>
+      (function () {
+        const steps = document.querySelectorAll("#hubspot-health-check .quiz-step");
+        const resultEl = document.querySelector("#hubspot-health-check .quiz-result");
+        const resultMsg = document.querySelector("#hubspot-health-check .result-message");
+        const submitEmail = document.getElementById("submit-email");
+        let currentStep = 0;
+        let score = 0;
+      
+        function showStep(index) {
+          steps.forEach((step, i) => {
+            step.classList.remove("active");
+            if (i === index) {
+              step.classList.add("active");
+            }
+          });
+        }
+      
+        document.querySelectorAll("#hubspot-health-check .quiz-step button").forEach(button => {
+          button.addEventListener("click", () => {
+            const val = parseInt(button.dataset.score);
+            score += val;
+            currentStep++;
+      
+            if (currentStep < steps.length) {
+              showStep(currentStep);
+            } else {
+              document.querySelectorAll("#hubspot-health-check .quiz-step").forEach(s => s.classList.remove("active"));
+              resultEl.classList.add("active");
+              let feedback = "Your CRM setup could use some love. Let's fix that.";
+              if (score >= 3 && score < 5) feedback = "You're on the right track! Let us show you how to take it further.";
+              else if (score === 5) feedback = "Excellent! You've nailed the basics, now let's take it to the next level.";
+              resultMsg.textContent = `Score: ${score}/5 – ${feedback}`;
+            }
+          });
+        });
+      
+        submitEmail.addEventListener("click", () => {
+          const email = document.getElementById("quiz-email").value;
+          if (email) {
+            // TODO: send email + score to your backend or external tool
+            alert("Thanks! Check your inbox shortly.");
+          }
+        });
+      
+        showStep(0);
+      })();
+      </script>
+      
+
   </body>
 </html>

@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RevOps Opportunity Spectrum</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f0e0c;
+    --surface: #1a1814;
+    --surface2: #242118;
+    --border: #2e2b24;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-dim: #7a6530;
+    --cream: #f0e8d8;
+    --muted: #7a7060;
+    --strategy: #4a7fa5;
+    --strategy-light: #6db3e8;
+    --ops: #c9a84c;
+    --ops-light: #e8c97a;
+    --ai-color: #78c88c;
+    --outsource-color: #b478c8;
+  }
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'Instrument Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    user-select: none;
+  }
+  header {
+    padding: 32px 52px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .header-left h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: var(--cream);
+    line-height: 1.1;
+  }
+  .header-left .subtitle {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.66rem;
+    color: var(--gold);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 5px;
+  }
+  .legend {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.68rem;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+  }
+  .legend-swatch { width: 20px; height: 7px; border-radius: 4px; }
+  .legend-swatch.s { background: linear-gradient(90deg, var(--strategy), var(--strategy-light)); }
+  .legend-swatch.o { background: linear-gradient(90deg, var(--ops), var(--ops-light)); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .legend-dot.ai { background: var(--ai-color); }
+  .legend-dot.out { background: var(--outsource-color); }
+  .legend-dot.core { background: var(--gold); border-radius: 2px; }
+  .legend-hint {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.59rem;
+    color: var(--muted);
+    opacity: 0.65;
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-left: 4px;
+  }
+
+  .app {
+    display: grid;
+    grid-template-columns: 205px 1fr;
+    height: calc(100vh - 101px);
+  }
+  .sidebar {
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    overflow-y: auto;
+  }
+  .sidebar-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.59rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 18px 12px;
+  }
+  .cat-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 11px 18px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.18s;
+    border-left: 2px solid transparent;
+  }
+  .cat-btn:hover { background: var(--surface); }
+  .cat-btn.active { background: var(--surface2); border-left-color: var(--gold); }
+  .cat-icon {
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; flex-shrink: 0;
+  }
+  .cat-text { flex: 1; min-width: 0; }
+  .cat-name { font-size: 0.79rem; font-weight: 500; color: var(--cream); display: block; }
+  .cat-btn.active .cat-name { color: var(--gold-light); }
+  .cat-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.57rem;
+    color: var(--muted);
+    display: flex;
+    gap: 4px;
+    margin-top: 3px;
+    align-items: center;
+  }
+  .mini-pip { width: 5px; height: 5px; border-radius: 1px; display: inline-block; flex-shrink: 0; }
+
+  .main { overflow-y: auto; padding: 32px 46px; }
+
+  .category-header {
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 0.35s forwards;
+  }
+  .category-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.55rem;
+    font-weight: 600;
+    color: var(--cream);
+  }
+  .category-desc {
+    color: var(--muted);
+    font-size: 0.78rem;
+    margin-top: 5px;
+    line-height: 1.6;
+  }
+
+  .col-headers {
+    display: grid;
+    grid-template-columns: 220px 1fr 86px;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 9px;
+    padding-bottom: 9px;
+    border-bottom: 1px solid var(--border);
+  }
+  .col-lbl {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .col-spectrum-lbl { display: flex; justify-content: space-between; }
+  .col-spectrum-lbl span {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .col-spectrum-lbl span:first-child { color: var(--strategy-light); }
+  .col-spectrum-lbl span:last-child  { color: var(--ops-light); }
+
+  .activity-list { display: flex; flex-direction: column; gap: 5px; }
+
+  .activity-row {
+    display: grid;
+    grid-template-columns: 220px 1fr 86px;
+    gap: 14px;
+    align-items: center;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: border-color 0.18s, background 0.18s;
+    opacity: 0;
+    animation: fadeUp 0.3s forwards;
+  }
+  .activity-row:hover { border-color: var(--gold-dim); background: var(--surface2); }
+
+  .act-label { display: flex; flex-direction: column; gap: 4px; }
+  .act-name { font-size: 0.8rem; color: var(--cream); line-height: 1.3; }
+  .opp-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.56rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-weight: 500;
+    display: inline-block;
+    width: fit-content;
+    transition: background 0.25s, color 0.25s, border-color 0.25s;
+  }
+  .tag-ai  { background: rgba(120,200,140,0.12); color: var(--ai-color);        border: 1px solid rgba(120,200,140,0.28); }
+  .tag-out { background: rgba(180,120,200,0.12); color: var(--outsource-color); border: 1px solid rgba(180,120,200,0.28); }
+  .tag-core{ background: rgba(201,168,76,0.10);  color: var(--gold);            border: 1px solid rgba(201,168,76,0.22); }
+
+  /* DRAGGABLE BAR */
+  .bar-wrap {
+    position: relative;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    cursor: ew-resize;
+  }
+  .bar-track {
+    position: absolute;
+    inset: 9px 0;
+    height: 10px;
+    background: rgba(0,0,0,0.4);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .bar-s {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: linear-gradient(90deg, var(--strategy) 0%, var(--strategy-light) 100%);
+    border-radius: 5px 0 0 5px;
+  }
+  .bar-o {
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    background: linear-gradient(90deg, var(--ops) 0%, var(--ops-light) 100%);
+    border-radius: 0 5px 5px 0;
+  }
+  .bar-handle {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 13px; height: 19px;
+    background: var(--bg);
+    border: 2px solid var(--gold-dim);
+    border-radius: 3px;
+    cursor: ew-resize;
+    z-index: 3;
+    transition: border-color 0.15s;
+  }
+  .bar-handle::before, .bar-handle::after {
+    content: '';
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    width: 1.5px; height: 7px;
+    background: var(--gold-dim);
+    border-radius: 1px;
+    transition: background 0.15s;
+  }
+  .bar-handle::before { left: 3px; }
+  .bar-handle::after  { right: 3px; }
+  .bar-wrap:hover .bar-handle,
+  .bar-wrap.dragging .bar-handle {
+    border-color: var(--gold);
+  }
+  .bar-wrap:hover .bar-handle::before,
+  .bar-wrap:hover .bar-handle::after,
+  .bar-wrap.dragging .bar-handle::before,
+  .bar-wrap.dragging .bar-handle::after {
+    background: var(--gold);
+  }
+
+  .pct-col {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.63rem;
+    text-align: right;
+    line-height: 1.7;
+    white-space: nowrap;
+  }
+  .pct-s { color: var(--strategy-light); }
+  .pct-o { color: var(--ops-light); }
+
+  .summary-bar {
+    margin-top: 20px;
+    padding: 15px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    opacity: 0;
+    animation: fadeUp 0.4s 0.22s forwards;
+    flex-wrap: wrap;
+  }
+  .sum-stat { display: flex; flex-direction: column; gap: 2px; }
+  .sum-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.57rem;
+    color: var(--muted);
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+  .sum-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+  .sum-val.s { color: var(--strategy-light); }
+  .sum-val.o { color: var(--ops-light); }
+  .sum-val.n { color: var(--cream); }
+  .divv { width: 1px; height: 34px; background: var(--border); }
+  .opp-pills { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+  .opp-pill {
+    display: flex; align-items: center; gap: 5px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    padding: 5px 11px;
+    border-radius: 20px;
+    transition: all 0.2s;
+  }
+  .opp-pill .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  .opp-pill.ai   { background: rgba(120,200,140,0.09); color: var(--ai-color);        border: 1px solid rgba(120,200,140,0.22); }
+  .opp-pill.out  { background: rgba(180,120,200,0.09); color: var(--outsource-color); border: 1px solid rgba(180,120,200,0.22); }
+  .opp-pill.core { background: rgba(201,168,76,0.09);  color: var(--gold);            border: 1px solid rgba(201,168,76,0.18); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(7px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .activity-row:nth-child(1) { animation-delay: 0.04s; }
+  .activity-row:nth-child(2) { animation-delay: 0.09s; }
+  .activity-row:nth-child(3) { animation-delay: 0.14s; }
+  .activity-row:nth-child(4) { animation-delay: 0.19s; }
+  .activity-row:nth-child(5) { animation-delay: 0.24s; }
+  .activity-row:nth-child(6) { animation-delay: 0.29s; }
+  .activity-row:nth-child(7) { animation-delay: 0.34s; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="subtitle">RevOps · 2-Person Agency · Opportunity Mapping</div>
+    <h1>Work Spectrum Analysis</h1>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch s"></div>Strategy &amp; Design</div>
+    <div class="legend-item"><div class="legend-swatch o"></div>Execution &amp; Ops</div>
+    <div class="legend-item"><div class="legend-dot ai"></div>AI (&lt;35% strategy)</div>
+    <div class="legend-item"><div class="legend-dot out"></div>Outsource (35–70%)</div>
+    <div class="legend-item"><div class="legend-dot core"></div>Core (&gt;70%)</div>
+    <div class="legend-hint">⟵ drag bars ⟶</div>
+  </div>
+</header>
+
+<div class="app">
+  <nav class="sidebar"><div class="sidebar-label">Categories</div><div id="nav"></div></nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+// Tag auto-assigned by strategy %
+// >70% strategy  → core (human judgment)
+// <35% strategy  → ai  (repeatable / automatable)
+// 35–70%         → outsource (mixed, delegatable)
+function autoTag(s) {
+  if (s >= 70) return 'core';
+  if (s <= 35) return 'ai';
+  return 'out';
+}
+const TAG_LABELS = { ai: '⚡ AI', out: '↗ Outsource', core: '✦ Core' };
+
+const CATEGORIES = [
+  {
+    id: 'crm',
+    icon: '🔧',
+    name: 'CRM & HubSpot',
+    color: '#c9a84c',
+    desc: 'Configuration, cleanup, and architecture inside the CRM - the technical core of your service.',
+    activities: [
+      { name: 'HubSpot Portal Audit', s: 25 },
+      { name: 'Lifecycle & Deal Stage Setup', s: 50 },
+      { name: 'Workflow & Automation Building', s: 30 },
+      { name: 'CRM Data Cleanup & Normalization', s: 25 },
+      { name: 'Reports & Dashboard Creation', s: 20 },
+      { name: 'Form Routing & Lead Assignment', s: 30 },
+    ]
+  },
+  {
+    id: 'strategy',
+    icon: '🧭',
+    name: 'Strategy & Advisory',
+    color: '#6db3e8',
+    desc: 'High-value consulting that defines direction - your highest-leverage, highest-margin output.',
+    activities: [
+      { name: 'Sales Process & Funnel Design', s: 85 },
+      { name: 'Sales Coaching & Consultation', s: 90 },
+      { name: 'Sales Call Reviews & Feedback', s: 90 },
+      { name: 'Funnel Visualization & Mapping', s: 80 },
+      { name: 'RevOps Roadmap Planning', s: 85 },
+      { name: 'ICP & Targeting Definition', s: 90 },
+    ]
+  },
+  {
+    id: 'marketing',
+    icon: '📣',
+    name: 'Marketing',
+    color: '#e8855a',
+    desc: 'Demand generation and content to keep your own pipeline full as a 2-person shop.',
+    activities: [
+      { name: 'Brand Positioning & Messaging', s: 90 },
+      { name: 'Content Strategy & Editorial', s: 80 },
+      { name: 'Case Studies & Social Content', s: 55 },
+      { name: 'Cold Outreach', s: 40 },
+      { name: 'Website Copy & Landing Pages', s: 30 },
+      { name: 'Analytics Review & Reporting', s: 50 },
+    ]
+  },
+  {
+    id: 'sales',
+    icon: '🤝',
+    name: 'Sales',
+    color: '#5a8ee8',
+    desc: 'Closing new clients - from first touch to signed contract.',
+    activities: [
+      { name: 'Discovery & Qualification Calls', s: 90 },
+      { name: 'Proposal & Scope Writing', s: 65 },
+      { name: 'Pricing & Deal Structuring', s: 85 },
+      { name: 'Referral & Partner Development', s: 80 },
+      { name: 'Outbound Prospecting & Follow-Up', s: 40 },
+      { name: 'CRM Pipeline Hygiene', s: 10 },
+    ]
+  },
+  {
+    id: 'cs',
+    icon: '⭐',
+    name: 'Customer Success',
+    color: '#e8c97a',
+    desc: 'Retention, expansion, and ensuring clients see measurable ROI from your work.',
+    activities: [
+      { name: 'Onboarding & Kickoff Calls', s: 80 },
+      { name: 'Ongoing Check-ins & QBRs', s: 75 },
+      { name: 'Renewal & Upsell Conversations', s: 85 },
+      { name: 'Client Progress Reporting', s: 20 },
+      { name: 'Documentation & SOP Delivery', s: 20 },
+      { name: 'Testimonials & Case Study Capture', s: 50 },
+    ]
+  },
+  {
+    id: 'ops',
+    icon: '⚙️',
+    name: 'Business Operations',
+    color: '#b478c8',
+    desc: 'Internal admin, finance, and systems that keep a lean 2-person shop running.',
+    activities: [
+      { name: 'Strategic Planning & Goal Setting', s: 95 },
+      { name: 'Invoicing & Contract Management', s: 20 },
+      { name: 'Bookkeeping & Tax Compliance', s: 40 },
+      { name: 'Internal Project Management', s: 30 },
+      { name: 'Toolstack & Vendor Management', s: 25 },
+      { name: 'Financial Review & Forecasting', s: 80 },
+    ]
+  },
+];
+
+// Mutable state: strategy % per [catId][actIndex]
+const state = {};
+CATEGORIES.forEach(cat => {
+  state[cat.id] = cat.activities.map(a => a.s);
+});
+
+let activeId = CATEGORIES[0].id;
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+function renderNav() {
+  document.getElementById('nav').innerHTML = CATEGORIES.map(cat => {
+    const vals = state[cat.id];
+    const aiN  = vals.filter(v => autoTag(v) === 'ai').length;
+    const outN = vals.filter(v => autoTag(v) === 'out').length;
+    const pips =
+      Array(Math.min(aiN,  4)).fill(`<span class="mini-pip" style="background:var(--ai-color);opacity:.75"></span>`).join('') +
+      Array(Math.min(outN, 3)).fill(`<span class="mini-pip" style="background:var(--outsource-color);opacity:.75;border-radius:50%"></span>`).join('');
+    return `
+      <button class="cat-btn ${cat.id === activeId ? 'active' : ''}" onclick="setCategory('${cat.id}')">
+        <div class="cat-icon" style="background:${cat.color}1e;color:${cat.color}">${cat.icon}</div>
+        <div class="cat-text">
+          <span class="cat-name">${cat.name}</span>
+          <div class="cat-meta">${cat.activities.length} activities &nbsp;${pips}</div>
+        </div>
+      </button>`;
+  }).join('');
+}
+
+// ── Main panel ────────────────────────────────────────────────────────────────
+function renderMain(catId) {
+  const cat  = CATEGORIES.find(c => c.id === catId);
+  const vals = state[catId];
+
+  document.getElementById('main').innerHTML = `
+    <div class="category-header">
+      <div class="category-title">${cat.icon} ${cat.name}</div>
+      <div class="category-desc">${cat.desc}</div>
+    </div>
+    <div class="col-headers">
+      <div class="col-lbl">Activity</div>
+      <div class="col-spectrum-lbl">
+        <span>◀ Strategy &amp; Design</span>
+        <span>Execution &amp; Ops ▶</span>
+      </div>
+      <div class="col-lbl" style="text-align:right">Split</div>
+    </div>
+    <div class="activity-list">
+      ${cat.activities.map((a, i) => rowHTML(catId, i, vals[i])).join('')}
+    </div>
+    <div class="summary-bar" id="sum">${summaryHTML(catId)}</div>
+  `;
+
+  cat.activities.forEach((_, i) => attachDrag(catId, i));
+}
+
+function rowHTML(catId, i, s) {
+  const tag = autoTag(s);
+  return `
+    <div class="activity-row" id="row-${catId}-${i}">
+      <div class="act-label">
+        <div class="act-name">${CATEGORIES.find(c => c.id===catId).activities[i].name}</div>
+        <div class="opp-tag tag-${tag}" id="tag-${catId}-${i}">${TAG_LABELS[tag]}</div>
+      </div>
+      <div class="bar-wrap" id="bw-${catId}-${i}">
+        <div class="bar-track">
+          <div class="bar-s" id="bs-${catId}-${i}" style="width:${s}%"></div>
+          <div class="bar-o" id="bo-${catId}-${i}" style="width:${100-s}%"></div>
+        </div>
+        <div class="bar-handle" id="bh-${catId}-${i}" style="left:${s}%"></div>
+      </div>
+      <div class="pct-col">
+        <div class="pct-s" id="ps-${catId}-${i}">${s}%</div>
+        <div class="pct-o" id="po-${catId}-${i}">${100-s}%</div>
+      </div>
+    </div>`;
+}
+
+function summaryHTML(catId) {
+  const vals  = state[catId];
+  const avg   = Math.round(vals.reduce((a,b)=>a+b,0) / vals.length);
+  const aiN   = vals.filter(v => autoTag(v) === 'ai').length;
+  const outN  = vals.filter(v => autoTag(v) === 'out').length;
+  const coreN = vals.filter(v => autoTag(v) === 'core').length;
+  return `
+    <div class="sum-stat">
+      <div class="sum-label">Avg. Strategy</div>
+      <div class="sum-val s">${avg}%</div>
+    </div>
+    <div class="divv"></div>
+    <div class="sum-stat">
+      <div class="sum-label">Avg. Execution</div>
+      <div class="sum-val o">${100-avg}%</div>
+    </div>
+    <div class="divv"></div>
+    <div class="sum-stat">
+      <div class="sum-label">Activities</div>
+      <div class="sum-val n">${vals.length}</div>
+    </div>
+    <div class="opp-pills">
+      ${aiN   > 0 ? `<div class="opp-pill ai"  ><div class="dot"></div>${aiN} AI opportunit${aiN===1?'y':'ies'}</div>` : ''}
+      ${outN  > 0 ? `<div class="opp-pill out" ><div class="dot"></div>${outN} outsource candidate${outN===1?'':'s'}</div>` : ''}
+      ${coreN > 0 ? `<div class="opp-pill core"><div class="dot"></div>${coreN} core / keep</div>` : ''}
+    </div>`;
+}
+
+// ── Drag ──────────────────────────────────────────────────────────────────────
+function attachDrag(catId, i) {
+  const wrap   = document.getElementById(`bw-${catId}-${i}`);
+  const handle = document.getElementById(`bh-${catId}-${i}`);
+  if (!wrap || !handle) return;
+
+  function pctFromX(clientX) {
+    const r = wrap.getBoundingClientRect();
+    const raw = (clientX - r.left) / r.width * 100;
+    return Math.round(Math.min(100, Math.max(0, raw)) / 5) * 5;
+  }
+
+  function applyVal(val) {
+    state[catId][i] = val;
+    document.getElementById(`bs-${catId}-${i}`).style.width = val + '%';
+    document.getElementById(`bo-${catId}-${i}`).style.width = (100-val) + '%';
+    handle.style.left = val + '%';
+    document.getElementById(`ps-${catId}-${i}`).textContent = val + '%';
+    document.getElementById(`po-${catId}-${i}`).textContent = (100-val) + '%';
+    const tag = autoTag(val);
+    const tagEl = document.getElementById(`tag-${catId}-${i}`);
+    tagEl.className = `opp-tag tag-${tag}`;
+    tagEl.textContent = TAG_LABELS[tag];
+    document.getElementById('sum').innerHTML = summaryHTML(catId);
+    // refresh nav pips without full re-render
+    renderNav();
+  }
+
+  // click on track
+  wrap.addEventListener('click', e => {
+    if (e.target === handle) return;
+    applyVal(pctFromX(e.clientX));
+  });
+
+  // mouse drag
+  handle.addEventListener('mousedown', e => {
+    e.preventDefault();
+    wrap.classList.add('dragging');
+    const onMove = e2 => applyVal(pctFromX(e2.clientX));
+    const onUp   = ()  => { wrap.classList.remove('dragging'); document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onUp);
+  });
+
+  // touch drag
+  handle.addEventListener('touchstart', e => {
+    e.preventDefault();
+    wrap.classList.add('dragging');
+    const onMove = e2 => { e2.preventDefault(); applyVal(pctFromX(e2.touches[0].clientX)); };
+    const onEnd  = ()  => { wrap.classList.remove('dragging'); document.removeEventListener('touchmove', onMove); document.removeEventListener('touchend', onEnd); };
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend',  onEnd);
+  }, { passive: false });
+}
+
+function setCategory(id) {
+  activeId = id;
+  renderNav();
+  renderMain(id);
+}
+
+renderNav();
+renderMain(activeId);
+</script>
+</body>
+</html>
